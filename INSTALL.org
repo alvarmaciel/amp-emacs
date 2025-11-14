@@ -77,9 +77,13 @@ Add to =~/.config/doom/packages.el=:
 ;; Required dependency
 (package! websocket)
 
-;; amp-emacs package
+;; amp-emacs package from local clone
 (package! amp
   :recipe (:local-repo "local-packages/amp-emacs"))
+
+;; Alternative: Install directly from GitHub repository
+;; (package! amp
+;;   :recipe (:host github :repo "alvarmaciel/amp-emacs"))
 #+end_src
 
 *** Step 4: Configure in config.el

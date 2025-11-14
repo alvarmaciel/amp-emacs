@@ -40,15 +40,22 @@ amp --version
 
 ```elisp
 (package! websocket)
-(package! amp :recipe (:local-repo "local-packages/amp-emacs"))
+
+;; Option A: Install from GitHub (recommended)
+(package! amp
+  :recipe (:host github :repo "alvarmaciel/amp-emacs"))
+
+;; Option B: Install from local clone
+;; (package! amp
+;;   :recipe (:local-repo "local-packages/amp-emacs"))
 ```
 
-2. **Clone to local-packages:**
+2. **If using local clone (Option B), clone the repository:**
 
 ```bash
 mkdir -p ~/.config/doom/local-packages
 cd ~/.config/doom/local-packages
-git clone https://github.com/yourusername/amp-emacs.git
+git clone https://github.com/alvarmaciel/amp-emacs.git
 ```
 
 3. **Configure in `~/.config/doom/config.el`:**
@@ -103,44 +110,53 @@ emacs -Q --eval "(progn (require 'package) (add-to-list 'package-archives '(\"me
 
 ### Basic Workflow
 
-1. **Start Amp server in Emacs:**
+1. **Open a file in your project:**
+   ```
+   C-x C-f /path/to/your/project/file.txt
+   ```
+   This establishes the project context for Amp.
+
+2. **Start Amp server in Emacs:**
    ```
    M-x amp-start
    ```
    
    You'll see: `Amp server started on port 9000. Run 'amp --ide' in your project.`
 
-2. **Connect Amp CLI:**
+3. **Connect Amp CLI:**
    ```bash
    cd /your/project
    amp --ide
    ```
 
-3. **Enable notifications (if not auto-enabled):**
+4. **Enable notifications (if not auto-enabled):**
    ```
    M-x amp-client-enable
    ```
 
-4. **Start using Amp:**
-   - Open files - Amp knows what you're viewing
-   - Select code and ask Amp about it
-   - Send messages: `M-x amp-send-message`
-   - Fix code: Select region, then `C-c a f`
+5. **Start using Amp:**
+   - **Ask about code:** Select text, then `M-x amp-client-send-message` (or `C-c a m`) while selection is active
+   - **Current context:** Send messages with `C-c a m` - Amp sees your current file, cursor position, and any selected text
+   - **Fix code:** Select region, then `C-c a f`
+   - **Explain code:** Select region, then `C-c a e`
+   - **Custom prompts:** Select region, then `C-c a p`
 
 ### Commands
 
-| Command | Keybinding | Description |
-|---------|------------|-------------|
-| `amp-start` | `C-c a s` | Start Amp server |
-| `amp-stop` | `C-c a q` | Stop Amp server |
-| `amp-status` | `C-c a ?` | Show connection status |
-| `amp-send-message` | `C-c a m` | Send message to Amp |
-| `amp-fix-region` | `C-c a f` | Fix selected code |
-| `amp-improve-region` | `C-c a i` | Improve selected code |
-| `amp-explain-region` | `C-c a e` | Explain selected code |
-| `amp-prompt-for-region` | `C-c a p` | Send region with custom prompt |
-| `amp-client-enable` | - | Enable file/selection tracking |
-| `amp-client-disable` | - | Disable notifications |
+| Command | Regular Emacs | Doom Emacs | Description |
+|---------|---------------|------------|-------------|
+| `amp-start` | `C-c a s` | `SPC a s` | Start Amp server |
+| `amp-stop` | `C-c a q` | `SPC a q` | Stop Amp server |
+| `amp-status` | `C-c a ?` | `SPC a ?` | Show connection status |
+| `amp-client-send-message` | `C-c a m` | `SPC a m` | Send message to Amp |
+| `amp-fix-region` | `C-c a f` | `SPC a f` | Fix selected code |
+| `amp-improve-region` | `C-c a i` | `SPC a i` | Improve selected code |
+| `amp-explain-region` | `C-c a e` | `SPC a e` | Explain selected code |
+| `amp-prompt-for-region` | `C-c a p` | `SPC a p` | Send region with custom prompt |
+| `amp-client-enable` | `M-x` | `M-x` | Enable file/selection tracking |
+| `amp-client-disable` | `M-x` | `M-x` | Disable notifications |
+
+**Note:** Doom Emacs keybindings require the `map!` configuration shown in the [Doom Emacs Configuration](#doom-emacs-configuration) section.
 
 ### Example Workflow
 
@@ -208,7 +224,23 @@ M-x amp-send-message RET hello from emacs! RET
   :config
   (setq amp-auto-start t)
   (setq amp-server-log-level 'info))
+
+;; Amp keybindings (Doom-compatible)
+;; Use SPC a prefix (SPC a m, SPC a f, etc.)
+(map! :leader
+      :prefix ("a" . "amp")
+      :desc "Send message" "m" #'amp-client-send-message
+      :desc "Fix region" "f" #'amp-fix-region
+      :desc "Improve region" "i" #'amp-improve-region
+      :desc "Explain region" "e" #'amp-explain-region
+      :desc "Custom prompt" "p" #'amp-prompt-for-region
+      :desc "Start server" "s" #'amp-start
+      :desc "Stop server" "q" #'amp-stop
+      :desc "Restart" "r" #'amp-restart
+      :desc "Status" "?" #'amp-status)
 ```
+
+**Note:** In Doom Emacs, the minor mode keybindings (`C-c a`) may not work. Use the `map!` configuration above instead, which binds commands to `SPC a` (leader key).
 
 ## Architecture
 
@@ -474,7 +506,7 @@ See [LICENSE](LICENSE) file for details.
 
 ## Credits
 
-**Built by:** Alvar ([@yourusername](https://github.com/yourusername)) and Claude (Anthropic)
+**Built by:** Alvar ([@alvarmaciel](https://github.com/alvarmaciel)) and Claude (Anthropic)
 
 ### Collaboration Disclaimer
 

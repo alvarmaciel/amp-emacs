@@ -132,6 +132,32 @@
     (setq amp-client--last-selection-active nil)
     (amp-server--log 'debug "Selection cleared")))
 
+;;;; User State
+
+(defun amp-client--get-user-state ()
+  "Get current editor state for Amp context."
+  (let ((state nil))
+    ;; Add visible files
+    (when (buffer-file-name)
+      (push `(visibleFiles . ,(vector (concat "file://" (buffer-file-name)))) state))
+    
+    ;; Add cursor position
+    (when (buffer-file-name)
+      (let* ((line (1- (line-number-at-pos)))
+             (col (current-column)))
+        (push `(cursorPosition . ((file . ,(buffer-file-name))
+                                  (line . ,line)
+                                  (character . ,col)))
+              state)))
+    
+    ;; Add selection if active
+    (when (and (region-active-p) (use-region-p))
+      (let ((selection (amp-client--selection-info)))
+        (when selection
+          (push `(selection . ,selection) state))))
+    
+    state))
+
 ;;;; Public API
 
 (defun amp-client-enable ()
@@ -167,8 +193,10 @@
   "Send a text MESSAGE to the Amp agent."
   (interactive "sMessage to Amp: ")
   (when amp-client--enabled
-    (amp-server--broadcast-notification
-     `((userSentMessage . ((message . ,message)))))
+    (let ((user-state (amp-client--get-user-state)))
+      (amp-server--broadcast-notification
+       `((userSentMessage . ((message . ,message)
+                             (userState . ,user-state))))))
     (message "Sent message to Amp")))
 
 (defun amp-client-send-region (start end)
