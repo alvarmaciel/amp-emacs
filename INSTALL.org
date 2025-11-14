@@ -1,0 +1,483 @@
+#+TITLE: Installation Guide for amp-emacs
+#+AUTHOR: Alvar & Claude
+#+STARTUP: showall
+
+* Prerequisites
+
+** Emacs Version
+
+Requires Emacs 28.1 or later.
+
+Check your version:
+#+begin_src sh
+emacs --version
+#+end_src
+
+** Required Package
+
+amp-emacs requires the =websocket= package from MELPA.
+
+** Amp CLI
+
+Install the Sourcegraph Amp CLI:
+
+#+begin_src sh
+# Using pnpm (recommended)
+pnpm add -g @sourcegraph/amp
+
+# Or using npm
+npm install -g @sourcegraph/amp
+
+# Or using yarn
+yarn global add @sourcegraph/amp
+#+end_src
+
+Verify installation:
+#+begin_src sh
+amp --version
+#+end_src
+
+** Amp Account
+
+Create a free account at https://ampcode.com
+
+** Directory Structure
+
+amp-emacs uses this directory structure:
+#+begin_example
+~/.local/share/amp/        # Data directory
+├── ide/                   # IDE integration files
+│   └── {port}.json       # Lockfile (created by amp-emacs)
+#+end_example
+
+This directory will be created automatically on first run.
+
+* Installation Methods
+
+** Method 1: Doom Emacs (Recommended for Doom Users)
+
+*** Step 1: Add MELPA to package archives
+
+Ensure MELPA is in your package archives. In Doom, this is usually already configured.
+
+*** Step 2: Clone the repository
+
+#+begin_src sh
+cd ~/.config/doom/
+mkdir -p local-packages
+cd local-packages
+git clone https://github.com/yourusername/amp-emacs.git
+#+end_src
+
+*** Step 3: Add to packages.el
+
+Add to =~/.config/doom/packages.el=:
+
+#+begin_src elisp
+;; Required dependency
+(package! websocket)
+
+;; amp-emacs package
+(package! amp
+  :recipe (:local-repo "local-packages/amp-emacs"))
+#+end_src
+
+*** Step 4: Configure in config.el
+
+Add to =~/.config/doom/config.el=:
+
+#+begin_src elisp
+(use-package! amp
+  :after websocket
+  :config
+  ;; Auto-start Amp server when Emacs starts
+  (setq amp-auto-start t)
+  
+  ;; Log level (debug, info, warn, error)
+  (setq amp-server-log-level 'info)
+  
+  ;; Throttle cursor notifications (seconds)
+  (setq amp-client-throttle-interval 0.1)
+  
+  ;; Optional: customize data directory
+  ;; (setq amp-server-data-home "~/.local/share/amp")
+  )
+#+end_src
+
+*** Step 5: Sync packages
+
+#+begin_src sh
+doom sync
+#+end_src
+
+*** Step 6: Restart Emacs
+
+** Method 2: use-package (Recommended for use-package Users)
+
+*** Step 1: Ensure MELPA is configured
+
+Add to your init.el before use-package declarations:
+
+#+begin_src elisp
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+(package-initialize)
+#+end_src
+
+*** Step 2: Install websocket package
+
+#+begin_src elisp
+M-x package-refresh-contents RET
+M-x package-install RET websocket RET
+#+end_src
+
+*** Step 3: Clone the repository
+
+#+begin_src sh
+git clone https://github.com/yourusername/amp-emacs.git ~/.emacs.d/lisp/amp-emacs
+#+end_src
+
+*** Step 4: Add to init.el
+
+#+begin_src elisp
+(use-package websocket
+  :ensure t)
+
+(use-package amp
+  :load-path "~/.emacs.d/lisp/amp-emacs"
+  :after websocket
+  :config
+  (setq amp-auto-start t)
+  (setq amp-server-log-level 'info)
+  :bind-keymap
+  ("C-c a" . amp-mode-map))
+#+end_src
+
+*** Step 5: Restart Emacs
+
+** Method 3: Manual Installation
+
+*** Step 1: Install websocket package
+
+#+begin_src elisp
+M-x package-refresh-contents RET
+M-x package-install RET websocket RET
+#+end_src
+
+Or install from command line:
+#+begin_src sh
+emacs --batch --eval "(progn (require 'package) (add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\")) (package-initialize) (package-refresh-contents) (package-install 'websocket))"
+#+end_src
+
+*** Step 2: Clone the repository
+
+#+begin_src sh
+git clone https://github.com/yourusername/amp-emacs.git ~/elisp/amp-emacs
+#+end_src
+
+*** Step 3: Add to init.el
+
+#+begin_src elisp
+;; Add to load path
+(add-to-list 'load-path "~/elisp/amp-emacs")
+
+;; Require websocket
+(require 'websocket)
+
+;; Load amp-emacs
+(require 'amp)
+
+;; Configure
+(setq amp-auto-start t)
+(setq amp-server-log-level 'info)
+
+;; Optional: Enable globally
+(amp-mode 1)
+
+;; Optional: Custom keybindings
+(global-set-key (kbd "C-c a") amp-mode-map)
+#+end_src
+
+*** Step 4: Restart Emacs
+
+** Method 4: Quick Test (No Installation)
+
+For quick testing without modifying your Emacs config:
+
+#+begin_src sh
+cd /path/to/amp-emacs
+emacs -Q --eval "(progn (require 'package) (add-to-list 'package-archives '(\"melpa\" . \"https://melpa.org/packages/\")) (package-initialize) (unless (package-installed-p 'websocket) (package-refresh-contents) (package-install 'websocket)) (add-to-list 'load-path \"$(pwd)\") (load \"amp\") (amp-start))"
+#+end_src
+
+* Verification
+
+** Step 1: Check amp-emacs is loaded
+
+In Emacs:
+#+begin_src elisp
+M-x describe-function RET amp-start RET
+#+end_src
+
+Should show documentation for =amp-start=.
+
+** Step 2: Start the server
+
+#+begin_src elisp
+M-x amp-start
+#+end_src
+
+Should see message: "Amp server started on port XXXX. Run 'amp --ide' in your project."
+
+** Step 3: Check server status
+
+#+begin_src elisp
+M-x amp-status
+#+end_src
+
+Should show: "Amp server running on port XXXX (project: /path/to/project, 0 clients)"
+
+** Step 4: Verify lockfile
+
+In a shell:
+#+begin_src sh
+cat ~/.local/share/amp/ide/*.json
+#+end_src
+
+Should see JSON with port, authToken, pid, workspaceFolders, and ideName.
+
+** Step 5: Test with Amp CLI
+
+In a terminal in your project directory:
+#+begin_src sh
+cd /path/to/your/project
+amp --ide
+#+end_src
+
+Should connect and show Amp interface. Check status in Emacs:
+#+begin_src elisp
+M-x amp-status
+#+end_src
+
+Should now show "1 clients" connected.
+
+** Step 6: Enable client notifications
+
+#+begin_src elisp
+M-x amp-client-enable
+#+end_src
+
+** Step 7: Test functionality
+
+In Emacs:
+1. Send a message: =M-x amp-send-message RET hello RET=
+2. Open a file in your project
+3. Select some text
+4. Try: =M-x amp-fix-region=
+
+The message should appear in the Amp CLI. Ask Amp about the file you're viewing to confirm it can see your context.
+
+* Troubleshooting
+
+** Emacs can't find websocket package
+
+Make sure MELPA is configured:
+#+begin_src elisp
+M-: package-archives RET
+#+end_src
+
+Should include MELPA. If not, add it and refresh:
+#+begin_src elisp
+(add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/") t)
+M-x package-refresh-contents
+M-x package-install RET websocket RET
+#+end_src
+
+** Server won't start
+
+Enable debug logging:
+#+begin_src elisp
+(setq amp-server-log-level 'debug)
+M-x amp-start
+#+end_src
+
+Check *Messages* buffer:
+#+begin_src elisp
+M-x view-echo-area-messages RET
+#+end_src
+
+** Port already in use
+
+The server automatically finds an available port (9000-9999). If all ports are taken, you'll see an error. Check what's using those ports:
+#+begin_src sh
+netstat -tuln | grep '900[0-9]'
+#+end_src
+
+** Amp CLI won't connect
+
+1. Check server is running:
+   #+begin_src elisp
+   M-x amp-status
+   #+end_src
+
+2. Check lockfile exists and contains correct port:
+   #+begin_src sh
+   cat ~/.local/share/amp/ide/*.json
+   #+end_src
+
+3. Verify Emacs and Amp CLI are in the same project directory
+   
+4. Try restarting both sides:
+   #+begin_src elisp
+   M-x amp-stop
+   M-x amp-start
+   #+end_src
+
+** Client notifications not enabled
+
+Check if client is enabled:
+#+begin_src elisp
+M-: amp-client--enabled RET
+#+end_src
+
+Should return =t=. If =nil=:
+#+begin_src elisp
+M-x amp-client-enable
+#+end_src
+
+Note: =amp-start= should automatically enable the client, but you can enable it manually if needed.
+
+** Messages not appearing in Amp CLI
+
+1. Ensure client is enabled (see above)
+2. Enable debug logging to see what's being sent:
+   #+begin_src elisp
+   M-: (setq amp-server-log-level 'debug) RET
+   M-x view-echo-area-messages
+   #+end_src
+3. Try sending a simple message:
+   #+begin_src elisp
+   M-x amp-send-message RET test RET
+   #+end_src
+
+** Performance issues
+
+Increase throttle interval to reduce notification frequency:
+#+begin_src elisp
+(setq amp-client-throttle-interval 0.5) ; Default is 0.1
+#+end_src
+
+* Configuration Examples
+
+** Minimal Configuration
+
+#+begin_src elisp
+(use-package websocket :ensure t)
+
+(use-package amp
+  :load-path "~/path/to/amp-emacs"
+  :config
+  (setq amp-auto-start t))
+#+end_src
+
+** Recommended Configuration
+
+#+begin_src elisp
+(use-package websocket :ensure t)
+
+(use-package amp
+  :load-path "~/path/to/amp-emacs"
+  :after websocket
+  :config
+  ;; Auto-start
+  (setq amp-auto-start t)
+  
+  ;; Logging
+  (setq amp-server-log-level 'info)
+  
+  ;; Performance
+  (setq amp-client-throttle-interval 0.1)
+  
+  ;; Custom data directory (optional)
+  ;; (setq amp-server-data-home "~/.config/amp")
+  
+  :bind-keymap
+  ("C-c a" . amp-mode-map))
+#+end_src
+
+** Advanced Configuration
+
+#+begin_src elisp
+(use-package websocket :ensure t)
+
+(use-package amp
+  :load-path "~/path/to/amp-emacs"
+  :after websocket
+  :init
+  ;; Set before loading
+  (setq amp-auto-start nil) ; Manual start
+  
+  :config
+  ;; Debug mode
+  (setq amp-server-log-level 'debug)
+  
+  ;; Performance tuning
+  (setq amp-client-throttle-interval 0.2)
+  
+  ;; Custom data directory
+  (setq amp-server-data-home (expand-file-name "amp" user-emacs-directory))
+  
+  ;; Custom keybindings
+  (with-eval-after-load 'amp
+    (define-key amp-mode-map (kbd "C-c a a") #'amp-start)
+    (define-key amp-mode-map (kbd "C-c a k") #'amp-stop))
+  
+  :bind-keymap
+  ("C-c a" . amp-mode-map))
+#+end_src
+
+* Uninstallation
+
+** Remove package
+
+*** Doom Emacs
+
+Remove from =packages.el= and =config.el=, then:
+#+begin_src sh
+doom sync
+#+end_src
+
+*** use-package / Manual
+
+Remove configuration from init.el and restart Emacs.
+
+** Clean up data
+
+#+begin_src sh
+rm -rf ~/.local/share/amp/ide/*.json
+#+end_src
+
+** Remove source code
+
+#+begin_src sh
+rm -rf ~/path/to/amp-emacs
+#+end_src
+
+* Next Steps
+
+After installation:
+
+1. Read [[file:README.md][README.md]] for usage guide
+2. Read [[file:QUICKSTART.md][QUICKSTART.md]] for quick examples
+3. Check [[file:TODO.org][TODO.org]] for development roadmap
+4. Try asking Amp about your code!
+
+* Getting Help
+
+- GitHub Issues: https://github.com/yourusername/amp-emacs/issues
+- Amp Documentation: https://ampcode.com/manual
+- Emacs documentation: =C-h i m elisp RET=
+
+* Credits
+
+Built by Alvar with assistance from Claude (Anthropic).
+Inspired by amp.nvim (https://github.com/sourcegraph/amp.nvim).

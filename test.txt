@@ -1,0 +1,2 @@
+# This is a test file created by Amp to demonstrate file creation functionality
+Hello from Amp!

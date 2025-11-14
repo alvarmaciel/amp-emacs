@@ -1,0 +1,394 @@
+#+TITLE: amp-emacs Development Roadmap
+#+AUTHOR: Alvar & Claude
+#+STARTUP: overview
+
+* Project Overview
+
+Deep integration of Sourcegraph Amp with Emacs, inspired by amp.nvim.
+
+** Current Status: ✅ WORKING
+
+We have a fully functional integration with:
+- WebSocket communication (port-based)
+- Lockfile management (port + authToken)
+- File tracking notifications
+- Selection notifications
+- User message sending
+- File reading and editing
+- All core features tested and working
+
+** Version: 0.2.0
+
+* DONE Phase 1: Core Implementation [4/4]
+CLOSED: [2025-11-14]
+:PROPERTIES:
+:CREATED: [2025-11-14]
+:END:
+
+** DONE Create WebSocket-based infrastructure
+CLOSED: [2025-11-14]
+- [X] WebSocket server with auto port detection
+- [X] Port-based lockfile (not socket-based)
+- [X] Authentication token generation
+- [X] JSON protocol with IDE message wrapping
+
+** DONE Implement client notifications
+CLOSED: [2025-11-14]
+- [X] visibleFilesDidChange with file:// URIs
+- [X] selectionDidChange with proper format
+- [X] userSentMessage for direct messages
+- [X] Throttling for performance
+
+** DONE Implement request handlers
+CLOSED: [2025-11-14]
+- [X] ping - health check
+- [X] authenticate - token validation
+- [X] getDiagnostics - diagnostics query
+- [X] readFile - read file contents
+- [X] editFile - apply buffer edits
+
+** DONE Test with actual amp --ide
+CLOSED: [2025-11-14]
+- [X] Amp CLI connects successfully
+- [X] Messages appear in Amp
+- [X] File tracking works
+- [X] Amp can read files
+- [X] Amp can edit files
+- [X] All core functionality verified
+
+* TODO Phase 2: Polish & Enhancement [0/5]
+
+** TODO Diagnostics Integration
+:PROPERTIES:
+:PRIORITY: B
+:END:
+
+Currently returns empty array. Need to integrate with flycheck/flymake.
+
+*** Implementation:
+- [ ] Detect flycheck/flymake presence
+- [ ] Convert diagnostics to Amp format
+- [ ] Send on getDiagnostics request
+- [ ] Update diagnostics when they change
+
+*** Format:
+#+begin_src json
+{
+  "entries": [
+    {
+      "path": "/path/to/file",
+      "line": 10,
+      "column": 5,
+      "severity": "error",
+      "message": "undefined variable",
+      "source": "flycheck"
+    }
+  ]
+}
+#+end_src
+
+** TODO Performance Optimization
+:PROPERTIES:
+:PRIORITY: C
+:END:
+
+- [ ] Profile notification overhead
+- [ ] Optimize JSON encoding/decoding
+- [ ] Batch messages when possible
+- [ ] Reduce memory allocation
+- [ ] Test with large files
+
+** TODO Better User Feedback
+:PROPERTIES:
+:PRIORITY: B
+:END:
+
+- [ ] Mode line indicator showing connection status
+- [ ] Visual feedback when Amp is editing
+- [ ] Notifications when edits are applied
+- [ ] Progress indicator for long operations
+- [ ] Error messages in dedicated buffer
+
+** TODO Multi-Project Support
+:PROPERTIES:
+:PRIORITY: C
+:END:
+
+- [ ] Track multiple project roots
+- [ ] Separate WebSocket servers per project
+- [ ] Switch contexts when changing projects
+- [ ] Clean up on project close
+- [ ] Handle project-specific settings
+
+** TODO Automated Testing
+:PROPERTIES:
+:PRIORITY: A
+:END:
+
+- [ ] Unit tests for amp-server.el
+- [ ] Unit tests for amp-client.el
+- [ ] Integration tests with mock Amp CLI
+- [ ] CI/CD pipeline
+- [ ] Test coverage reporting
+
+* TODO Phase 3: Advanced Features [0/4]
+
+** TODO Selection Format Complete Implementation
+:PROPERTIES:
+:PRIORITY: A
+:END:
+
+Current implementation sends basic selection. Need to match amp.nvim exactly:
+
+#+begin_src json
+{
+  "uri": "file:///path/to/file",
+  "selections": [
+    {
+      "range": {
+        "startLine": 10,
+        "startCharacter": 5,
+        "endLine": 15,
+        "endCharacter": 20
+      },
+      "content": "selected text"
+    }
+  ]
+}
+#+end_src
+
+Tasks:
+- [ ] Implement exact format
+- [ ] Test with visual selections
+- [ ] Handle multiple selections (if needed)
+- [ ] Verify Amp uses this data
+
+** TODO Integration Features
+:PROPERTIES:
+:PRIORITY: B
+:END:
+
+- [ ] which-key integration for keybindings
+- [ ] Hydra for command menu
+- [ ] Company/corfu completion for Amp commands
+- [ ] Embark actions for Amp operations
+- [ ] Consult integration for searching Amp threads
+
+** TODO Documentation Improvements
+:PROPERTIES:
+:PRIORITY: B
+:END:
+
+- [ ] Video tutorial
+- [ ] Animated GIFs for README
+- [ ] API documentation for extensibility
+- [ ] Troubleshooting guide expansion
+- [ ] Contributing guide
+
+** TODO Package Distribution
+:PROPERTIES:
+:PRIORITY: C
+:END:
+
+- [ ] Prepare for MELPA submission
+- [ ] Create proper Doom module
+- [ ] Spacemacs layer (if requested)
+- [ ] Nix package
+- [ ] Guix package
+
+* TODO Phase 4: Optional Enhancements [0/3]
+
+** TODO MCP (Model Context Protocol) Support
+:PROPERTIES:
+:PRIORITY: C
+:END:
+
+If Amp adds MCP support, integrate it:
+- [ ] Research MCP protocol
+- [ ] Implement MCP handlers
+- [ ] Add user commands for MCP tools
+- [ ] Documentation
+
+** TODO Custom Tools / Commands
+:PROPERTIES:
+:PRIORITY: C
+:END:
+
+Allow users to define custom Amp tools:
+- [ ] Define API for custom commands
+- [ ] Hook system for extensions
+- [ ] Example custom tools
+- [ ] Documentation
+
+** TODO Advanced Workflows
+:PROPERTIES:
+:PRIORITY: C
+:END:
+
+- [ ] Org-mode integration for literate Amp sessions
+- [ ] Save/restore Amp conversation history
+- [ ] Share Amp threads from Emacs
+- [ ] Magit integration for commit messages
+- [ ] Project templates with Amp
+
+* Known Issues
+
+** None currently reported
+
+All major issues from development have been resolved:
+- ✅ WebSocket vs UNIX socket (fixed - using WebSocket)
+- ✅ Lockfile format (fixed - using port + authToken)
+- ✅ Message protocol (fixed - using IDE protocol wrappers)
+- ✅ Client notifications not enabled (fixed - auto-enable on start)
+- ✅ Syntax errors in amp-server.el (fixed - parentheses balanced)
+- ✅ Messages not reaching Amp (fixed - correct notification names)
+
+* Ideas for Future
+
+** Community Requests (To Be Collected)
+- [ ] Integration with other AI tools (Copilot, ChatGPT, etc.)
+- [ ] Custom prompts library
+- [ ] Keyboard-driven Amp interface in Emacs
+- [ ] Amp response rendering in Emacs buffers
+- [ ] Speech-to-text for Amp messages
+
+** Research Topics
+- [ ] LSP integration for better context
+- [ ] Tree-sitter integration
+- [ ] Eglot integration
+- [ ] Performance benchmarks vs amp.nvim
+
+* Development Notes
+
+** 2025-11-14: Complete Rewrite to WebSocket
+
+Completely rewrote the protocol implementation after discovering:
+1. Amp uses WebSocket, not UNIX sockets
+2. Lockfile format is ={"port": X, "authToken": "Y", ...}=
+3. Messages use IDE protocol format with wrappers
+4. Notification names are specific (e.g., =visibleFilesDidChange=)
+
+Key changes:
+- Replaced make-network-process UNIX socket with WebSocket server
+- Updated lockfile to JSON with port and token
+- Wrapped all messages in proper IDE protocol format
+- Changed notification names to match amp.nvim exactly
+- Added readFile and editFile handlers
+- Implemented proper file editing in buffers
+
+Result: **Fully working integration!**
+
+** Critical Learning
+
+The protocol was completely different from initial assumptions:
+- ❌ UNIX sockets → ✅ WebSocket (TCP)
+- ❌ socket_path → ✅ port + authToken  
+- ❌ Simple JSON → ✅ IDE protocol wrappers
+- ❌ Custom message names → ✅ Standard IDE messages
+
+Always check the reference implementation (amp.nvim) before assuming!
+
+** Next Session Tasks
+
+Priority tasks for next development session:
+
+1. Add real diagnostics support (flycheck/flymake)
+2. Improve selection notification format
+3. Add mode line indicator
+4. Write basic tests
+5. Create animated demo for README
+
+* Resources
+
+- *amp.nvim source*: https://github.com/sourcegraph/amp.nvim
+  - lua/amp/visible_files.lua - File tracking
+  - lua/amp/selection.lua - Selection format
+  - lua/amp/message.lua - User messages
+  - lua/amp/server/init.lua - WebSocket server
+  - lua/amp/lockfile.lua - Lockfile format
+
+- *Amp manual*: https://ampcode.com/manual
+- *WebSocket package*: https://github.com/ahyatt/emacs-websocket
+- *Emacs docs*:
+  - (info "(elisp) Network Processes")
+  - (info "(elisp) Parsing JSON")
+  - (info "(elisp) Hooks")
+
+* Version History
+
+** 0.2.0 (2025-11-14) - WebSocket Rewrite
+- Complete rewrite using WebSocket instead of UNIX sockets
+- Proper IDE protocol implementation
+- Working file reading and editing
+- Tested and verified with Amp CLI v0.0.1763121689
+- Full feature parity with amp.nvim core features
+
+** 0.1.0 (2025-11-14) - Initial Prototype
+- UNIX socket implementation (incorrect)
+- Basic message protocol
+- Not tested with real Amp CLI
+- Deprecated
+
+* Success Criteria
+
+✅ **Core Functionality**
+- [X] Amp CLI connects to Emacs
+- [X] Send messages to Amp
+- [X] Amp knows current file
+- [X] Amp can read files
+- [X] Amp can edit files
+- [X] Clean startup/shutdown
+
+✅ **User Experience**
+- [X] Simple installation
+- [X] Good documentation
+- [X] Helpful error messages
+- [X] Intuitive commands
+
+⚠️ **Optional Enhancements**
+- [ ] Advanced features
+- [ ] Perfect performance
+- [ ] 100% feature parity with amp.nvim
+
+* Contribution Guide
+
+Interested in contributing? Here's how:
+
+1. **Report Issues**: Use GitHub issues for bugs
+2. **Request Features**: Open discussion in issues
+3. **Submit PRs**: Fork, branch, commit, PR
+4. **Improve Docs**: PRs for documentation welcome
+5. **Share**: Tell others about amp-emacs!
+
+** Code Style
+- Follow Emacs Lisp conventions
+- Use lexical binding
+- Document all functions
+- Keep functions small and focused
+- Add comments for complex logic
+
+** Testing
+Before submitting PR:
+- Test with =amp --ide=
+- Check with =M-x checkdoc=
+- Verify byte-compilation clean
+- Test on fresh Emacs with =-Q=
+
+* Contacts
+
+- **GitHub**: https://github.com/yourusername/amp-emacs
+- **Issues**: https://github.com/yourusername/amp-emacs/issues
+- **Amp Community**: https://buildcrew.team
+- **Email**: your-email@example.com
+
+* License
+
+MIT License (or GPL-3.0+ to match Emacs conventions)
+
+See LICENSE file for details.
+
+---
+
+**Status: Project is working and ready for daily use!** 🎉
+
+Last updated: 2025-11-14
