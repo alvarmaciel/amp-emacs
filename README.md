@@ -135,26 +135,28 @@ emacs -Q --eval "(progn (require 'package) (add-to-list 'package-archives '(\"me
    ```
 
 5. **Start using Amp:**
-   - **Ask about code:** Select text, then `M-x amp-client-send-message` (or `C-c a m`) while selection is active
-   - **Current context:** Send messages with `C-c a m` - Amp sees your current file, cursor position, and any selected text
-   - **Fix code:** Select region, then `C-c a f`
-   - **Explain code:** Select region, then `C-c a e`
-   - **Custom prompts:** Select region, then `C-c a p`
+   - **Ask about code:** Select text, then `M-x amp-client-send-message` (or `C-c a m` / `SPC A m` in Doom) while selection is active
+   - **Current context:** Send messages - Amp sees your current file, cursor position, and any selected text
+   - **Fix code:** Select region, then use the fix command
+   - **Explain code:** Select region, then use the explain command
+   - **Custom prompts:** Select region, then use the prompt command
+   
+   See the [Commands](#commands) table below for specific keybindings.
 
 ### Commands
 
-| Command | Regular Emacs | Doom Emacs | Description |
-|---------|---------------|------------|-------------|
-| `amp-start` | `C-c a s` | `SPC a s` | Start Amp server |
-| `amp-stop` | `C-c a q` | `SPC a q` | Stop Amp server |
-| `amp-status` | `C-c a ?` | `SPC a ?` | Show connection status |
-| `amp-client-send-message` | `C-c a m` | `SPC a m` | Send message to Amp |
-| `amp-fix-region` | `C-c a f` | `SPC a f` | Fix selected code |
-| `amp-improve-region` | `C-c a i` | `SPC a i` | Improve selected code |
-| `amp-explain-region` | `C-c a e` | `SPC a e` | Explain selected code |
-| `amp-prompt-for-region` | `C-c a p` | `SPC a p` | Send region with custom prompt |
-| `amp-client-enable` | `M-x` | `M-x` | Enable file/selection tracking |
-| `amp-client-disable` | `M-x` | `M-x` | Disable notifications |
+| Command | Regular Emacs | Doom (evil) | Doom (non-evil) | Description |
+|---------|---------------|-------------|-----------------|-------------|
+| `amp-start` | `C-c a s` | `SPC A s` | `C-c A s` | Start Amp server |
+| `amp-stop` | `C-c a q` | `SPC A q` | `C-c A q` | Stop Amp server |
+| `amp-status` | `C-c a ?` | `SPC A ?` | `C-c A ?` | Show connection status |
+| `amp-client-send-message` | `C-c a m` | `SPC A m` | `C-c A m` | Send message to Amp |
+| `amp-fix-region` | `C-c a f` | `SPC A f` | `C-c A f` | Fix selected code |
+| `amp-improve-region` | `C-c a i` | `SPC A i` | `C-c A i` | Improve selected code |
+| `amp-explain-region` | `C-c a e` | `SPC A e` | `C-c A e` | Explain selected code |
+| `amp-prompt-for-region` | `C-c a p` | `SPC A p` | `C-c A p` | Send region with custom prompt |
+| `amp-client-enable` | `M-x` | `M-x` | `M-x` | Enable file/selection tracking |
+| `amp-client-disable` | `M-x` | `M-x` | `M-x` | Disable notifications |
 
 **Note:** Doom Emacs keybindings require the `map!` configuration shown in the [Doom Emacs Configuration](#doom-emacs-configuration) section.
 
@@ -226,21 +228,24 @@ M-x amp-send-message RET hello from emacs! RET
   (setq amp-server-log-level 'info))
 
 ;; Amp keybindings (Doom-compatible)
-;; Use SPC a prefix (SPC a m, SPC a f, etc.)
+;; For evil-mode users: Use SPC A prefix (SPC A m, SPC A f, etc.)
+;; For non-evil users: Use C-c A prefix (C-c A m, C-c A f, etc.)
 (map! :leader
-      :prefix ("a" . "amp")
+      :prefix ("A" . "amp")
       :desc "Send message" "m" #'amp-client-send-message
       :desc "Fix region" "f" #'amp-fix-region
       :desc "Improve region" "i" #'amp-improve-region
       :desc "Explain region" "e" #'amp-explain-region
-      :desc "Custom prompt" "p" #'amp-prompt-for-region
+      :desc "Prompt for region" "p" #'amp-prompt-for-region
       :desc "Start server" "s" #'amp-start
       :desc "Stop server" "q" #'amp-stop
       :desc "Restart" "r" #'amp-restart
       :desc "Status" "?" #'amp-status)
 ```
 
-**Note:** In Doom Emacs, the minor mode keybindings (`C-c a`) may not work. Use the `map!` configuration above instead, which binds commands to `SPC a` (leader key).
+**Note:** In Doom Emacs, the minor mode keybindings (`C-c a`) may not work. Use the `map!` configuration above instead:
+- **With evil-mode:** `SPC A` prefix (e.g., `SPC A m` to send message)
+- **Without evil-mode:** `C-c A` prefix (e.g., `C-c A m` to send message)
 
 ## Architecture
 
