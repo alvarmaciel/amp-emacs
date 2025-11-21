@@ -10,15 +10,33 @@ This implementation uses WebSocket communication (matching amp.nvim) and follows
 
 ## Features
 
+### Core Functionality
 - ✅ **Bidirectional communication** with `amp --ide` via WebSocket
 - ✅ **Port-based connection** with authentication token (auto-finds port 9000-9999)
 - ✅ **File tracking** - Amp knows what files you're viewing
 - ✅ **Selection notifications** - Amp sees selected code
 - ✅ **User messages** - Send messages directly to Amp
 - ✅ **File reading** - Amp can read files from your workspace
-- ✅ **File editing** - Amp can edit files directly in your Emacs buffers
+- ✅ **File editing** - Amp can edit files directly in your Emacs buffers (with automatic backups)
 - ✅ **Region commands** - Fix, explain, and improve code selections
-- ⚠️ **Diagnostics** - Basic support (returns empty, needs flycheck/flymake integration)
+
+### Security & Safety
+- ✅ **Path traversal protection** - Validates all file paths, prevents access outside workspace
+- ✅ **Sensitive directory blocking** - Blocks access to `.git`, `.ssh`, `.gnupg` directories
+- ✅ **Cryptographically secure tokens** - Uses `/dev/urandom` on Unix for 256-bit tokens
+- ✅ **Atomic file writes** - Uses temporary files + rename to prevent corruption
+- ✅ **Automatic backups** - Creates timestamped backups before editing files
+- ✅ **Content validation** - Checks file size limits (default 10MB), null bytes, UTF-8 encoding
+- ✅ **Sanitized logging** - Removes sensitive data from logs (tokens, passwords, etc.)
+- ✅ **Symlink protection** - Prevents editing symbolic links
+- ✅ **Rate limiting** - DoS protection (configurable requests/second per client)
+- ✅ **Client connection limits** - Configurable maximum concurrent connections
+- ✅ **Message size limits** - Validates WebSocket message sizes (default 15MB)
+- ✅ **Rollback on error** - Restores buffer state if edit fails
+- ✅ **Read-only buffer respect** - Won't edit buffers marked as read-only
+
+### Diagnostics
+- ⚠️ **Diagnostics API** - Implemented but returns empty (needs flycheck/flymake integration)
 
 ## Quick Start
 
@@ -201,6 +219,25 @@ M-x amp-send-message RET hello from emacs! RET
 ;; (setq amp-server-data-home "~/.config/amp")
 ```
 
+### Security Configuration
+
+```elisp
+;; Create backups before editing files (default: t)
+(setq amp-server-backup-on-edit t)
+
+;; Maximum file size for edits (default: 10MB)
+(setq amp-server-max-file-size (* 10 1024 1024))
+
+;; Maximum number of concurrent connections (default: 5)
+(setq amp-server-max-clients 5)
+
+;; Maximum requests per second per client (default: 100)
+(setq amp-server-max-request-rate 100)
+
+;; Maximum WebSocket message size (default: 15MB)
+(setq amp-server-max-message-size (* 15 1024 1024))
+```
+
 ### Recommended Configuration (use-package)
 
 ```elisp
@@ -251,18 +288,31 @@ M-x amp-send-message RET hello from emacs! RET
 
 ### Three Main Components
 
-#### 1. amp-server.el (~12KB, ~390 lines)
+#### 1. amp-server.el (~25KB, ~844 lines)
 - **WebSocket server** on TCP localhost
 - **Port discovery** - automatically finds available port (9000-9999)
-- **Authentication** - generates and validates auth tokens
+- **Authentication** - generates cryptographically secure 256-bit tokens via `/dev/urandom`
 - **Lockfile management** - creates JSON lockfile with port + token
 - **Message protocol** - handles IDE protocol requests/responses
 - **Request handlers**:
   - `ping` - health check
   - `authenticate` - token validation
-  - `readFile` - read file contents
-  - `editFile` - apply edits to buffers
+  - `readFile` - read file contents (with path validation)
+  - `editFile` - apply edits to buffers (with backups, validation, atomic writes)
   - `getDiagnostics` - return diagnostics
+- **Security layer**:
+  - Path traversal protection (validates relative to project root)
+  - Symlink resolution and security checks
+  - Sensitive directory blocking (`.git`, `.ssh`, `.gnupg`)
+  - Content validation (size, encoding, null bytes)
+  - Atomic file operations with rollback
+  - Automatic backups with timestamps
+- **Safety & reliability**:
+  - Rate limiting (DoS protection)
+  - Client connection limits
+  - Message size validation
+  - Sanitized logging (no sensitive data)
+  - Read-only buffer respect
 
 #### 2. amp-client.el (~6KB, ~185 lines)
 - **Notifications** to Amp:
@@ -413,6 +463,21 @@ Reduce notification frequency:
 (setq amp-client-throttle-interval 0.5)  ; Default is 0.1
 ```
 
+### Backup files appearing
+
+Amp creates automatic backups before editing files (e.g., `file.txt.amp-backup-20251121-143022`). If you want to disable this:
+
+```elisp
+(setq amp-server-backup-on-edit nil)
+```
+
+To clean up old backup files:
+
+```bash
+# Remove all amp backup files in a directory
+find . -name "*.amp-backup-*" -delete
+```
+
 ## Development
 
 ### Project Structure
@@ -475,6 +540,16 @@ See [TODO.org](TODO.org) for full roadmap.
 - Amp can read any file in your workspace
 - Amp can edit files directly in your buffers
 - All user commands work as expected
+
+✅ **Security & Safety (enterprise-ready):**
+- Path traversal protection prevents accessing files outside workspace
+- Sensitive directories (`.git`, `.ssh`, `.gnupg`) are blocked
+- Cryptographically secure token generation (256-bit)
+- Atomic file writes prevent corruption
+- Automatic backups created before edits
+- Rate limiting prevents DoS attacks
+- Sanitized logging prevents credential leaks
+- Read-only buffers are respected
 
 ✅ **Tested with:**
 - Amp CLI v0.0.1763121689 (2025-11-14)
