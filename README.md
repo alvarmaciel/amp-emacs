@@ -11,7 +11,7 @@ This implementation uses WebSocket communication (matching amp.nvim) and follows
 ## Features
 
 ### Core Functionality
-- ✅ **Bidirectional communication** with `amp --ide` via Unix Socket
+- ✅ **Bidirectional communication** with `amp --ide` via WebSocket
 - ✅ **Port-based connection** with authentication token (auto-finds port 9000-9999)
 - ✅ **File tracking** - Amp knows what files you're viewing
 - ✅ **Selection notifications** - Amp sees selected code
